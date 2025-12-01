@@ -1,0 +1,11 @@
+<tool name="analyze_js_ast">
+    <description>
+    Analyzes JavaScript code using AST parsing to find interesting literals (strings, numbers)
+    and potential API endpoints or secrets.
+    </description>
+    <parameters>
+        <parameter name="js_code" type="string" required="true">
+            The JavaScript code to analyze.
+        </parameter>
+    </parameters>
+</tool>
