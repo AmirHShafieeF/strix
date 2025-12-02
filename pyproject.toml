@@ -63,6 +63,7 @@ requests = "^2.32.0"
 libtmux = "^0.46.2"
 beautifulsoup4 = "^4.14.3"
 esprima = "^4.0.1"
+curl-cffi = "^0.13.0"
 
 [tool.poetry.group.dev.dependencies]
 # Type checking and static analysis

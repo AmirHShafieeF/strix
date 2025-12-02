@@ -1,5 +1,8 @@
 from typing import List, Optional
 import re
+import os
+import subprocess
+import tempfile
 from bs4 import BeautifulSoup
 from strix.tools.registry import register_tool
 
@@ -65,3 +68,51 @@ def generate_context_wordlist(html_content: str, js_content: List[str]) -> str:
     """
     words = context_fuzzer.generate_wordlist(html_content, js_content)
     return "\n".join(words)
+
+@register_tool
+def fuzz_with_context(target_url: str, wordlist_content: str) -> str:
+    """
+    Executes ffuf using the provided wordlist content against the target URL.
+
+    Args:
+        target_url: The URL to fuzz (must contain FUZZ keyword).
+        wordlist_content: The content of the wordlist to use (newline separated).
+
+    Returns:
+        The output from ffuf.
+    """
+    if "FUZZ" not in target_url:
+        return "Error: target_url must contain 'FUZZ' keyword."
+
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.txt') as temp_wordlist:
+        temp_wordlist.write(wordlist_content)
+        temp_wordlist_path = temp_wordlist.name
+
+    try:
+        # Run ffuf
+        # -u: Target URL
+        # -w: Wordlist
+        # -mc: Match codes (default 200,204,301,302,307,401,403) - we'll stick to defaults or 200,301,302
+        # -o: Output file (we'll read stdout/json)
+        # -json: Output JSON
+
+        cmd = [
+            "ffuf",
+            "-u", target_url,
+            "-w", temp_wordlist_path,
+            "-json",
+            "-mc", "200,204,301,302,403" # 403 to detect WAF blocks
+        ]
+
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120) # 2 min timeout
+
+        if result.returncode != 0 and not result.stdout:
+            return f"ffuf failed: {result.stderr}"
+
+        return result.stdout
+
+    except Exception as e:
+        return f"Error running ffuf: {e}"
+    finally:
+        if os.path.exists(temp_wordlist_path):
+            os.unlink(temp_wordlist_path)

@@ -1,11 +1,14 @@
-<tool name="analyze_js_ast">
+<tool name="validate_secrets">
     <description>
-    Analyzes JavaScript code using AST parsing to find interesting literals (strings, numbers)
-    and potential API endpoints or secrets.
+    Validates a list of potential secrets by testing them against the target URL.
+    Attempts common authentication headers.
     </description>
     <parameters>
-        <parameter name="js_code" type="string" required="true">
-            The JavaScript code to analyze.
+        <parameter name="secrets" type="array" required="true">
+            List of potential secret strings.
+        </parameter>
+        <parameter name="target_url" type="string" required="true">
+            The URL to test against (e.g., /api/user).
         </parameter>
     </parameters>
 </tool>

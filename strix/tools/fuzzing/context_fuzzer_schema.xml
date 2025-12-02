@@ -1,13 +1,13 @@
-<tool name="generate_context_wordlist">
+<tool name="fuzz_with_context">
     <description>
-    Generates a custom wordlist based on the target's HTML and JS content.
+    Executes ffuf using the provided wordlist content against the target URL.
     </description>
     <parameters>
-        <parameter name="html_content" type="string" required="true">
-            The HTML source of the page.
+        <parameter name="target_url" type="string" required="true">
+            The URL to fuzz (must contain FUZZ keyword).
         </parameter>
-        <parameter name="js_content" type="array" required="true">
-            A list of JavaScript source strings.
+        <parameter name="wordlist_content" type="string" required="true">
+            The content of the wordlist to use (newline separated).
         </parameter>
     </parameters>
 </tool>
